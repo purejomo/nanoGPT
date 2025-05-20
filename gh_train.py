@@ -30,6 +30,11 @@ from statistics_util.statistic_plots import (
 from variations.model_variations import model_variation_dictionary
 
 from model import GPT, GPTConfig
+
+from fairscale.nn.data_parallel import FullyShardedDataParallel as FSDP
+from fairscale.optim import OSS
+from fairscale.nn.wrap import auto_wrap
+import torch.distributed as dist  # 이 줄 추가
 # Inference related imports
 import tiktoken
 
@@ -103,8 +108,7 @@ def parse_args():
     model_group.add_argument('--n_embd', default=384, type=int, help="Size of embeddings in decoder layer and wte unless n_embd_wte is set." )
     model_group.add_argument('--n_embd_wte', default=None, type=int, help="If different from n_embd, an adapter table will be automatically created")
     model_group.add_argument('--n_embd_wte_scale_tying', default=True, action=argparse.BooleanOptionalAction, help="Enable weight tying for scale up and scale down matrices, only has effects if n_embd_wte is not 'None'.")
-    ## model_group.add_argument('--dropout', default=0.2, type=float)
-    model_group.add_argument('--dropout', default=0.1, type=float)
+    model_group.add_argument('--dropout', default=0.2, type=float)
     model_group.add_argument('--use_post_ln', default=False, action=argparse.BooleanOptionalAction)
     model_group.add_argument('--window_size', default=None, type=int, help="Sliding window size, note this cannot be greater than block size")
     model_group.add_argument('--gate', default=False, action=argparse.BooleanOptionalAction, help="option for gated attention see https://arxiv.org/abs/2306.12929")
@@ -139,7 +143,6 @@ def parse_args():
             "ohmh",
             "mol",
         ]
-
     model_group.add_argument("--use_lsv", default=False, action=argparse.BooleanOptionalAction, help="whether to use Learned Steering Vectors")
     model_group.add_argument("--lsv_index", default=None, type=int, help="Which steering vector to use")
     model_group.add_argument("--lsv_variant", default="one_hot", type=str, choices=lsv_variations, help="Which steering vector to use")
@@ -234,7 +237,6 @@ def parse_args():
     model_group.add_argument("--linear_variant_mlp", type=str, default="linear", choices=linear_variants)
     model_group.add_argument("--linear_variant_mlp_up", type=str, default=None, choices=linear_variants, help="sets the linear variant for c_fc in mlp (takes precedence over linear_variant_mlp)")
     model_group.add_argument("--linear_variant_mlp_down", type=str, default=None, choices=linear_variants, help="sets the linear variant for c_proj in mlp (takes precedence over linear_variant_mlp)")
-
     ## Linear Weight Initialization Options
     model_group.add_argument( "--linear_mean_init", type=float, default=0.0)
     model_group.add_argument( "--linear_std_init", type=float, default=0.02)
@@ -248,7 +250,7 @@ def parse_args():
                              help="Scheduler for change in quant level. When linear is set, the quantization will increase dynamically based on the training step")
 
     ## Quantization Method Options
-    quant_methods = ["ternary_quant", "symmetric_quant", "affine_quant", "stochastic_quant", "awq_quant"]
+    quant_methods = ["ternary_quant", "symmetric_quant", "affine_quant", "stochastic_quant"]
 
     ## WTE
     model_group.add_argument("--quantize_wte", default=None, action=argparse.BooleanOptionalAction, help="Whether the word embedding is quantized")
@@ -265,6 +267,8 @@ def parse_args():
 
     ### Attention Activations
     model_group.add_argument("--quantize_attn_act", action=argparse.BooleanOptionalAction, default=False, help="quantize all input/output activations in attn")
+
+    #### Whether to do Attention Activation quantization at the Arrow
     model_group.add_argument("--quantize_attn_act_input", action=argparse.BooleanOptionalAction, default=False, help="quantize input activation to attention")
     model_group.add_argument("--quantize_attn_act_qk_mult_q_input", action=argparse.BooleanOptionalAction, default=False, help="quantize query input activation to qk mult")
     model_group.add_argument("--quantize_attn_act_qk_mult_k_input", action=argparse.BooleanOptionalAction, default=False, help="quantize key input activation to qk mult")
@@ -276,6 +280,7 @@ def parse_args():
 
     ### Default Precisions for Attention Activations
     model_group.add_argument("--quantize_attn_act_bits", type=int, default=8, help="number of bits for attn quantization")
+
     ### Overrides for granular Attention Activatinos
     model_group.add_argument("--quantize_attn_act_input_bits", type=int, default=None, help="number of bits for attention input quantization")
     model_group.add_argument("--quantize_attn_act_qk_mult_q_input_bits", type=int, default=None, help="number of bits for qk mult query input quantization")
@@ -295,6 +300,7 @@ def parse_args():
 
     ### Default Precisions for MLP Activations
     model_group.add_argument("--quantize_mlp_act_bits", type=int, default=8, help="number of bits for mlp quantization")
+
     ### Overrides for granular MLP Activatinos
     model_group.add_argument("--quantize_mlp_act_input_bits", type=int, default=None, help="number of bits for mlp input quantization")
     model_group.add_argument("--quantize_mlp_act_activation_input_bits", type=int, default=None, help="number of bits for activation function input quantization")
@@ -309,7 +315,7 @@ def parse_args():
     ### Default methods and precisions
     model_group.add_argument("--quantize_linear_method", type=str, default="affine_quant", choices=quant_methods, help="function used for linear quantization")
     model_group.add_argument("--quantize_linear_bits", type=int, default=8, help="number of bits for linear quantization")
-    
+
     #### Overrides for granular Methods and Precisions
     model_group.add_argument("--quantize_linear_attn_q_method", type=str, default=None, choices=quant_methods, help="function used for c_attn_q quantization")
     model_group.add_argument("--quantize_linear_attn_q_bits", type=int, default=None, help="number of bits for c_attn_q quantization")
@@ -374,12 +380,7 @@ def parse_args():
         "exppolymax",
         "linearmax",
         "consmax_v3",
-        "elemax",
-        "elemax_quan",
-        "headmax",
-        "relumax_paper",
-        "entmax15",
-        "sparsemax",
+        "elemax"
         ]
 
     ## Selection of softmax variation for attention and output layers
@@ -503,7 +504,6 @@ def parse_args():
     logging_group.add_argument('--wandb_log', default=False, action=argparse.BooleanOptionalAction)
     logging_group.add_argument('--wandb_project', type=str, default='out-test')
     logging_group.add_argument('--wandb_run_name', type=str, default='logs-test')
-    logging_group.add_argument('--wandb_resume_id', default='', type=str, metavar='ID', help='If resuming a run, the id of the run in wandb')
 
     ### Create model from json config file & save config file to json
     logging_group.add_argument('--load_config_json', type=str, help="Option to load model parameters from existing json file")
@@ -547,6 +547,9 @@ class Trainer:
         if self.args.lr_decay_match_max_iters:
             self.args.lr_decay_iters = self.args.max_iters
         
+        self.iter_num = 0  # 기본값으로 초기화
+        self.best_val_loss = float('inf')  # 초기값 설정
+
         self.setup()
 
         if self.args.sample_only:
@@ -555,16 +558,50 @@ class Trainer:
         if self.args.create_statistics:
             self.stats = initialize_statistics(self.args.n_layer, self.args.n_head)
 
+    def load_checkpoint(self, filename):
+        """체크포인트를 로드하고 모델 상태를 복원."""
+        checkpoint_path = filename
+        if not os.path.exists(checkpoint_path):
+            raise FileNotFoundError(f"Checkpoint file {checkpoint_path} not found!")
+
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+
+        # 학습 상태 복원
+        self.iter_num = checkpoint['iter_num']
+        self.best_val_loss = checkpoint['best_val_loss']
+        self.model_args = checkpoint['model_args']
+
+        # 데이터 로드 및 모델 초기화
+        self.load_data()
+        gptconf = GPTConfig(**self.model_args)
+        self.model = GPT(gptconf)
+        self.model = FSDP(self.model, mixed_precision=True, cpu_offload={"offload_params": True} )  # 파라미터와 gradient를 CPU로 오프로드)  # FSDP 초기화는 여기서 한 번만 호출
+        self.model.load_state_dict(checkpoint['model'])  # 저장된 상태를 모델에 로드
+
+        # 옵티마이저 상태 복원
+        self.optimizer = OSS(
+            params=self.model.parameters(),
+            optim=torch.optim.Adam,
+            lr=self.args.learning_rate,
+            weight_decay=self.args.weight_decay,
+            betas=(self.args.beta1, self.args.beta2)
+        )
+        self.optimizer.load_state_dict(checkpoint['optimizer'])  # 옵티마이저 상태 복원
+
+        print(f"Checkpoint loaded from {checkpoint_path}")
+
     def setup(self):
-        # Setup DDP
+        # DDP 초기화
         self.ddp = int(os.environ.get('RANK', -1)) != -1
         if self.ddp:
-            init_process_group(backend=self.args.backend)
+            # torch.distributed 초기화
+            if not torch.distributed.is_initialized():
+                dist.init_process_group(backend=self.args.backend)
             self.ddp_rank = int(os.environ['RANK'])
             self.ddp_local_rank = int(os.environ['LOCAL_RANK'])
             self.ddp_world_size = int(os.environ['WORLD_SIZE'])
             self.device = f'cuda:{self.ddp_local_rank}'
-            print("this is my device", self.device)
+            print(f"Using device: {self.device}")
             torch.cuda.set_device(self.device)
             self.master_process = self.ddp_rank == 0
             self.seed_offset = self.ddp_rank
@@ -575,151 +612,78 @@ class Trainer:
             self.seed_offset = 0
             self.ddp_world_size = 1
 
-        self.tokens_per_iter = self.args.gradient_accumulation_steps * self.ddp_world_size * self.args.batch_size * self.args.block_size
+        # 샤딩 관련 변수
+        self.tokens_per_iter = (
+            self.args.gradient_accumulation_steps *
+            self.ddp_world_size *
+            self.args.batch_size *
+            self.args.block_size
+        )
 
         if self.master_process:
             os.makedirs(self.args.out_dir, exist_ok=True)
 
-        print("seed: ", self.args.seed)
-        print("seed offset: ", self.seed_offset)
+        print(f"Seed: {self.args.seed}")
         torch.manual_seed(self.args.seed + self.seed_offset)
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
 
         self.device_type = 'cuda' if 'cuda' in self.args.device else 'cpu'
-        self.ptdtype = {"bfloat16" : torch.bfloat16, "float16" : torch.float16, "float32" : torch.float32}[self.args.dtype]
+        self.ptdtype = {"bfloat16": torch.bfloat16, "float16": torch.float16, "float32": torch.float32}[self.args.dtype]
         self.ctx = nullcontext() if self.device_type == 'cpu' else torch.amp.autocast(device_type=self.device_type, dtype=self.ptdtype)
 
-        # Model settings
-        # TODO only add if they are defined from the argparse
+        # Model 설정
         self.model_args = {action.dest: getattr(self.args, action.dest) for action in self.model_group._group_actions}
         self.model_args['vocab_size'] = None
         self.model_args['eval_interval'] = self.args.eval_interval
 
-        # Training settings
-        self.training_args = {action.dest: getattr(self.args, action.dest) for action in self.training_group._group_actions}
-        if self.args.dataset_list is not None:
-            self.model_args['lsv_dataset_num'] = len(self.args.dataset_list)
-            print("self.model_args['lsv_dataset_num']")
-            print(self.model_args['lsv_dataset_num'])
-
+        # 모델 생성
         if self.args.init_from == 'scratch':
             self.model_args['vocab_size'] = self.get_vocab_size_from_meta()
-
-            # Save full configuration used for training
-            config_json = {**self.model_args, **self.training_args}
-            with open(self.args.out_dir + "/full_config.json", "w") as configuration_file:
-                json.dump(config_json, configuration_file, indent=4)
-            with open(self.args.out_dir + "/best_val_loss_and_iter.txt", 'w') as file:
-                print("resetting best val loss file")
-
-            self.load_data()
-            gptconf = GPTConfig(**self.model_args)
-            self.model = GPT(gptconf)
-            self.iter_num = 0 # for starting from scratch
-            self.best_val_loss = 1e9 # really big number
-        elif self.args.init_from == 'resume' or self.args.init_from == 'prev_run':
-            if self.args.init_from == 'resume':
-                ckpt_path = os.path.join(self.args.out_dir, 'ckpt.pt')
-                checkpoint = torch.load(ckpt_path, map_location=self.device)
-                self.iter_num = checkpoint['iter_num']
-            else:
-                ckpt_path = os.path.join(self.args.prev_run_ckpt, 'ckpt.pt')
-                checkpoint = torch.load(ckpt_path, map_location=self.device)
-                self.iter_num = 0
-
-            # we should enforce that during resume training, the identical model args are used
-            checkpoint_model_args = checkpoint['model_args']
-            self.model_args = checkpoint_model_args
-
-            # support for changing select params from resume (eg. for finetuning) based on cmd-line args entered (checks if diff than defaults)
-            altered_model_args = {action.dest: getattr(self.args, action.dest) for action in self.model_group._group_actions if action.default != getattr(self.args, action.dest)}
-            for k in altered_model_args:
-                self.model_args[k] = altered_model_args[k]
-
             self.load_data()
             gptconf = GPTConfig(**self.model_args)
             self.model = GPT(gptconf)
 
-            ## TODO: Add ability here to swap WTE factors.
-            state_dict = checkpoint['model']
-            for k,v in list(state_dict.items()):
-                if k.startswith('_orig_mod.'):
-                    state_dict[k[len('_orig_mod.'):]] = state_dict.pop(k)
-            self.model.load_state_dict(state_dict)
-            self.best_val_loss = checkpoint['best_val_loss']
-            if self.args.lsv_focused_training:
-                self.model.freeze_non_lsv_parameters()
+        elif self.args.init_from in ['resume', 'prev_run']:
+            ckpt_path = os.path.join(self.args.out_dir, 'ckpt.pt') if self.args.init_from == 'resume' else os.path.join(self.args.prev_run_ckpt, 'ckpt.pt')
+            self.load_checkpoint(ckpt_path)
 
         elif self.args.init_from.startswith('gpt2'):
-
             assert self.args.gpt2_type in model_variation_dictionary
-
-            self.iter_num = 0 # for starting from scratch
-            self.best_val_loss = 1e9 # really big number
-
             variation_dict = model_variation_dictionary[self.args.gpt2_type]
-            # NOTE: the hierarchy of parameters goes: 1)variation_dict >> 2)cmd-line args >> 3)GPTConfig defaults
-            for k in variation_dict:
-                self.model_args[k] = variation_dict[k]
-
+            for k, v in variation_dict.items():
+                self.model_args[k] = v
             gptconf = GPTConfig(**self.model_args)
             self.model = GPT.from_pretrained(gptconf, model_type=self.args.gpt2_type)
             self.load_data()
 
-            if self.args.lsv_focused_training:
-                self.model.freeze_non_lsv_parameters()
+        # 블록 단위로 auto_wrap 설정
+        self.model = auto_wrap(self.model)  # FairScale auto_wrap
+        self.model = FSDP(self.model, mixed_precision=True, cpu_offload={"offload_params": True})  # FSDP 적용
 
-        if self.args.block_size < self.model.config.block_size:
-            self.model.crop_block_size(self.args.block_size)
-            self.model_args['block_size'] = self.args.block_size
+        # Optimizer 초기화
+        self.scaler = torch.amp.GradScaler(enabled=(self.args.dtype == 'float16'))
+        self.optimizer = OSS(
+            params=self.model.parameters(),
+            optim=torch.optim.Adam,
+            lr=self.args.learning_rate,
+            weight_decay=self.args.weight_decay,
+            betas=(self.args.beta1, self.args.beta2)
+        )
 
-        self.model.to(self.device)
-
-        # Print the model summary
-        if self.args.print_model_info:
-            print_summary(self.model)
-            print_model_blocks(self.model)
-            print_module_structure(self.model)
-            print_model_tree(self.model, print_params=True)
-
-        # Optimizer
-        self.scaler = torch.amp.GradScaler(self.device_type, enabled=(self.args.dtype == 'float16'))
-        self.optimizer = self.model.configure_optimizers(self.args.weight_decay, self.args.learning_rate,
-                                                         (self.args.beta1, self.args.beta2), self.device_type)
-
-        if self.args.compile:
-            print("compiling the model... (takes a ~minute)")
-            self.unoptimized_model = self.model
-            self.model = torch.compile(self.model)
-
-        if self.ddp:
-            self.model = DDP(self.model, device_ids=[self.ddp_local_rank])
-
-        self.raw_model = self.model.module if self.ddp else self.model
-
-        timestamp_prefix = time.strftime("%Y%m%d-%H%M%S")
-        if self.args.timestamp:
-            timestamp_prefix = self.args.timestamp
-
-        # Tensorboard
+        # Tensorboard 설정
         if self.args.tensorboard_log:
-            timestamped_run_name = timestamp_prefix + "_" + self.args.tensorboard_run_name
-            if self.args.csv_log:
-                self.args.csv_name = timestamped_run_name
-            log_subpath = os.path.join(self.args.tensorboard_log_dir, timestamped_run_name)
+            timestamp_prefix = time.strftime("%Y%m%d-%H%M%S")
+            log_subpath = os.path.join(self.args.tensorboard_log_dir, f"{timestamp_prefix}_{self.args.tensorboard_run_name}")
             self.writer = SummaryWriter(log_subpath)
 
-        # Wandb
+        # Wandb 설정
         if self.args.wandb_log and self.master_process:
             import wandb
-            self.args.csv_name = self.args.wandb_run_name       ##GH
-            wandb.init(project=self.args.wandb_project, 
-                        name=self.args.csv_name, 
-                        config=self.args,
-                        resume='must' if self.args.wandb_resume_id else None,
-                        id=self.args.wandb_resume_id if self.args.wandb_resume_id else None)      ##GH
+            wandb.init(project=self.args.wandb_project, name=self.args.wandb_run_name, config=self.args)
+
         self.load_tokenizer()
+
 
 
     def load_tokenizer(self):
@@ -1181,7 +1145,7 @@ class Trainer:
 
     def save_checkpoint(self, filename):
         checkpoint = {
-            'model': self.raw_model.state_dict(),
+            'model': self.model.state_dict(),  # FSDP의 샤딩된 상태 저장
             'optimizer': self.optimizer.state_dict(),
             'model_args': self.model_args,
             'iter_num': self.iter_num,

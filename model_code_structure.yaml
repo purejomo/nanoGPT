@@ -1,0 +1,31 @@
+GPT Class
+│
+├── __init__(): 초기화 메서드
+│   ├── Transformer 구성 요소 초기화
+│   │   ├── Embedding (wte, wpe)
+│   │   ├── Scale Matrices (scale_up, scale_down)
+│   │   ├── Transformer Layers (h)
+│   │   ├── Output Softmax Variant
+│   │   ├── 기타 설정 (LSV, Weight Tying)
+│   ├── 파라미터 초기화 (_init_weights)
+│   ├── 가중치 불러오기 (import_wte, import_scale_matrices)
+│
+├── forward(): 모델의 Forward Pass
+│   ├── Embedding 계산 (wte, wpe)
+│   ├── Transformer Layers 통과
+│   ├── Output Layer 계산 (lm_head)
+│   ├── Loss 계산 (CrossEntropy Loss)
+│
+├── 추가 기능
+│   ├── generate(): 토큰 생성
+│   ├── generate_with_stop(): 특정 조건에서 토큰 생성 중단
+│   ├── configure_optimizers(): 옵티마이저 구성
+│   ├── from_pretrained(): Pretrained GPT 모델 불러오기
+│   ├── update_block_size(): 블록 크기 변경
+│   ├── update_num_angles(), update_rope_length(): Rotary Embedding 업데이트
+│   ├── import/export 기능
+│       ├── import_wte(), export_wte()
+│       ├── import_scale_matrices(), export_scale_matrices()
+│
+└── 평가 및 FLOPs 계산
+    └── estimate_mfu(): FLOPs 계산

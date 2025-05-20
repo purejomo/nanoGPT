@@ -18,8 +18,8 @@ class QuantizedEmbedding(nn.Embedding):
         return out
 
 class RotaryEmbedding(nn.Module):
-    """ Implementation of standard Rotary Position Embeddings (RoPE).
-
+    """ 
+    Implementation of standard Rotary Position Embeddings (RoPE).
     This implementation follows the standard approach for applying RoPE,
     which applies a rotational transformation to each pair of elements in a vector.
     """
@@ -43,7 +43,7 @@ class RotaryEmbedding(nn.Module):
         self.start_index = 0
 
     def increment_start_index(self):
-        """Reset start index to zero."""
+        """ maybe for sliding window attention's rotary position embeddings but it haven't been implemented yet"""
         self.start_index += 1
 
     def _generate_inv_freq(self, device):

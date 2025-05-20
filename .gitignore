@@ -17,3 +17,15 @@ out*/
 .aider*
 
 venv/*
+
+# parameter directories
+params_llama/
+params_small/
+params_nano/
+
+# excluded files
+*.png
+attention_heatmaps/
+data/
+elemax_beta_factors/
+entmax/

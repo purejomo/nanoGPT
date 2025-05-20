@@ -2,25 +2,65 @@
 //pwd = /home/ghlee/nanoGPT
 
 ### GPT-baby
-python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample_original.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-opus-100 --eval_dataset /home/ghlee/nanoGPT/data/opus-100  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
+
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
+
+
 
 ### GPT-small
 python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softmax-witkitext103-re --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/entmax15-witkitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softermax-witkitext103-re --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/consmax_v2-witkitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/relumax_paper-witkitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softplus-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softmax-opus-100 --eval_dataset /home/ghlee/nanoGPT/data/opus-100  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softmax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softmax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softmax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
+
 python sample.py --out_dir /home/ghlee/nanoGPT/params_small/elemax-witkitext103-re --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/elemax-opus-100 --eval_dataset /home/ghlee/nanoGPT/data/opus-100  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/elemax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/elemax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_small/elemax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
+
+
 
 ### Llama-baby
 python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/entmax15-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/softermax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/consmax_v2-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_small/relumax_paper-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
-python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softplus-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-opus-100 --eval_dataset /home/ghlee/nanoGPT/data/opus-100  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
 
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-opus-100 --eval_dataset /home/ghlee/nanoGPT/data/opus-100  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-python-codes-25k --eval_dataset /home/ghlee/nanoGPT/data/python-codes-25k  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-open_math_instruct_1 --eval_dataset /home/ghlee/nanoGPT/data/open_math_instruct_1  --eval_only --eval_iters 1
+
+
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softermax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/softplus-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/polymax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/wikitext103  --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/consmax_v1-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103 --eval_only   --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/consmax_v2-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103 --eval_only   --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/consmax_v3-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103 --eval_only   --eval_iters 10
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/relumax-wikitext103 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103 --eval_only  --eval_iters 250  --show_heatmaps
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-wikitext103-0.1 --eval_dataset /home/ghlee/nanoGPT/data/wikitext103 --eval_only   --eval_iters 10
+python sample.py --out_dir /home/ghlee/nanoGPT/params_nano/elemax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only   --eval_iters 10  --show_heatmaps
+
+### llama
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/elemax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only  --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softermax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only  --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/softmax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/consmax-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only --eval_iters 1
+python sample.py --out_dir /home/ghlee/nanoGPT/params_llama/consmax_v2-cnn_dailymail --eval_dataset /home/ghlee/nanoGPT/data/cnn_dailymail --eval_only
 
 """
 
@@ -40,9 +80,8 @@ import tiktoken
 from rich import print
 from torch.nn import functional as F
 from collections import OrderedDict
-torch.cuda.cudart().cudaProfilerStart()
-## from model import print_softmax_stats, print_average_sparsity, print_average_sparsities
-from model import GPT, GPTConfig
+
+from model_original import GPT, GPTConfig
 from model_info_util.model_info import print_summary, print_module_structure, print_model_blocks
 from variations.model_variations import model_variation_dictionary
 
@@ -160,29 +199,10 @@ def load_validation_data(block_size, eval_dataset):
 
 def get_batch(data, block_size, device):
     # Create a random batch from the dataset
-    ## ix = torch.randint(len(data) - block_size, (1,))  batch hardcoding in original
-    ix = torch.randint(len(data) - block_size, (1,))   ## GH
+    ix = torch.randint(len(data) - block_size, (1,))
     x = torch.stack([torch.from_numpy((data[i:i + block_size]).astype(np.int64)) for i in ix])
     y = torch.stack([torch.from_numpy((data[i + 1:i + 1 + block_size]).astype(np.int64)) for i in ix])
     return x.to(device), y.to(device)
-
-## for block-wise latency evaluation and validation loss calculation
-# def calculate_validation_loss(model, val_data, block_size, eval_iters, device, dtype):
-#     model.eval()
-#     losses = []
-#     with torch.no_grad():
-#         total_time = 0
-#         for _ in range(eval_iters):
-#             X, Y = get_batch(val_data,  block_size, device)
-#             with torch.amp.autocast(device_type=device, dtype=dtype):
-#                 start = time.perf_counter()
-#                 logits, loss = model(X, Y)
-#                 end = time.perf_counter()
-#                 total_time += (end - start)
-#             losses.append(loss.item())
-#     print(f"Elapsed time: {total_time} seconds")
-#     return np.mean(losses)
-
 
 ## for token-wise latency evaluation        ## GH
 # def calculate_validation_loss(model, val_data, block_size, eval_iters, device, dtype):
@@ -262,6 +282,7 @@ def custom_char_with_byte_fallback_decode(ids, itos, custom_char_count):
 
 def main():
     args = parse_args()
+
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
     torch.backends.cuda.matmul.allow_tf32 = True
@@ -371,6 +392,7 @@ def main():
     start_ids = encode(args.start)
     model.eval()
     model.to(args.device)
+
     # Print the model summary
     if args.print_model_info:
         print_summary(model)
@@ -403,7 +425,7 @@ def main():
         val_loss = calculate_validation_loss(model, val_data,
                                              model.config.block_size,
                                              args.eval_iters, args.device, ptdtype)
-        print(f"Validation Loss: {val_loss:.4f}")    ## GH
+        ## print(f"Validation Loss: {val_loss:.4f}")    ## GH
         return
 
     x = torch.tensor(start_ids, dtype=torch.long, device=args.device)[None, ...]
@@ -462,9 +484,4 @@ def main():
                             file.write(output_line)
 
 if __name__ == "__main__":
-    torch.cuda.cudart().cudaProfilerStart()
     main()
-    ## print_softmax_stats()
-    ## print_average_sparsity()
-    ## print_average_sparsities()
-    ## print_global_attention_statistics()

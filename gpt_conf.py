@@ -56,7 +56,7 @@ class GPTConfig:
 
     # Logging options
     softmax_io_logging: bool = False
-    consmax_beta_gamma_logging: bool = False
+    consmax_beta_gamma_logging: bool = True
     plot_statistics: bool = False
     softmax_io_log_interval: int = 1
 
@@ -66,7 +66,7 @@ class GPTConfig:
     recompute_backward_pass: bool = False
 
     ## Flash attention
-    disable_flash_attention: bool = False
+    disable_flash_attention: bool = True
 
     # MLP Options
     use_parallel_mlp: bool = False
@@ -87,8 +87,8 @@ class GPTConfig:
     shared_attn_sym: bool = False
 
     # Softmax Alternatives and Options
-    softmax_variant_attn: str = "softmax" # Choices: "softmax" "softermax" "sigsoftmax" "polymax" "strongermax" "consmax"
-    softmax_variant_output: str = "softmax" # Choices: "softmax" "softermax" "sigsoftmax" "polymax" "strongermax" "consmax"
+    softmax_variant_attn: str = "softmax" # Choices: "softmax" "softermax" "sigsoftmax" "polymax" "strongermax" "consmax"  "elemax"     ##GH
+    softmax_variant_output: str = "softmax" # Choices: "softmax" "softermax" "sigsoftmax" "polymax" "strongermax" "consmax" "elemax"    ##GH
 
     ## General Options
     div_by_seq_len: bool = False # for supported functions will divide by seq length
@@ -126,7 +126,7 @@ class GPTConfig:
     strongermax_strength: float = 2.0 # Softermax with option of 'stronger' (larger integer) bases
     strongermax_sum_to_1: bool = False
     strongermax_divisor: float = 1.0
-    strongermax_use_xmax: bool = True
+    strongermax_use_xmax: bool = False
     strongermax_xmax_guess: float = 1.0
     strongermax_overflow_recompute: bool = False
 
